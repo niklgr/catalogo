@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Umine - Catálogo Avanzado SENCE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --umine-blue: #1d2a4e;
+            --umine-sky: #00ade1;
+            --umine-yellow: #ffcd22;
+            --umine-green: #80b122;
+            --umine-red: #da3728;
+            --umine-purple: #575e9a;
+        }
+
+        body {
+            font-family: 'Lexend', sans-serif;
+            color: var(--umine-blue);
+            background-color: #fff;
+        }
+
+        .bg-umine-blue { background-color: var(--umine-blue); }
+        .text-umine-sky { color: var(--umine-sky); }
+        
+        .card-course {
+            border-radius: 2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #f0f0f0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-course:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -15px rgba(29, 42, 78, 0.12);
+        }
+
+        .filter-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%231d2a4e'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+
+        .btn-main {
+            background-color: var(--umine-blue);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-main:hover {
+            background-color: var(--umine-sky);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            border: 2px solid var(--umine-blue);
+            color: var(--umine-blue);
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-outline:hover {
+            background-color: var(--umine-blue);
+            color: white;
+        }
+
+        .modal-blur {
+            backdrop-filter: blur(8px);
+            background: rgba(29, 42, 78, 0.4);
+        }
+
+        .cat-card {
+            aspect-ratio: 1/1;
+            border-radius: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            color: white;
+            text-align: center;
+            padding: 1.25rem;
+        }
+
+        .cat-card:hover {
+            transform: scale(1.03);
+            filter: brightness(1.05);
+        }
+
+        .advanced-filter-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .advanced-filter-panel.open {
+            max-height: 500px;
+            opacity: 1;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body class="pt-20">
+
+    <!-- NAVEGACIÓN -->
+    <nav class="fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 py-4 px-8">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="text-2xl font-black text-umine-blue tracking-tighter cursor-pointer" onclick="showHome()">umine</div>
+            <div class="flex items-center gap-6">
+                <button onclick="showAdmin()" class="bg-gray-100 text-umine-blue px-4 py-2 rounded-full text-xs font-bold uppercase hover:bg-umine-blue hover:text-white transition">
+                    <i class="fas fa-lock mr-2"></i>Admin
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- VISTA: HOME -->
+    <main id="view-home" class="block">
+        <section class="py-20 px-6 text-center">
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6">Potencia el talento <br><span class="text-umine-sky">de tu equipo</span></h1>
+            <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-12">Catálogo interactivo 2025. Cursos con financiamiento SENCE para cada área de tu empresa.</p>
+            
+            <div class="max-w-5xl mx-auto mb-20 px-4">
+                <div class="relative flex items-center gap-3">
+                    <div class="relative flex-grow">
+                        <input type="text" id="quickSearch" placeholder="Busca por nombre o código SENCE..." class="w-full py-5 pl-14 pr-6 rounded-full border-2 border-gray-100 focus:border-umine-sky focus:ring-0 text-lg shadow-xl shadow-blue-900/5">
+                        <i class="fas fa-search absolute left-6 top-1/2 -translate-y-1/2 text-gray-300"></i>
+                    </div>
+                    <button onclick="toggleAdvancedSearch()" class="flex items-center gap-2 bg-gray-50 text-umine-blue px-6 py-5 rounded-full font-bold text-sm hover:bg-gray-100 transition whitespace-nowrap">
+                        <i class="fas fa-sliders-h"></i> <span class="hidden sm:inline">Búsqueda Avanzada</span>
+                    </button>
+                    <button onclick="handleQuickSearch()" class="bg-umine-blue text-white px-8 py-5 rounded-full font-bold hover:shadow-lg transition">Buscar</button>
+                </div>
+
+                <div id="advancedPanelHome" class="advanced-filter-panel bg-gray-50 rounded-[2.5rem] p-8 text-left border border-gray-100">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-gray-400 mb-2 block ml-2">Vertical o Categoría</label>
+                            <select id="homeFilterCat" class="filter-select w-full bg-white border-none rounded-2xl px-5 py-4 font-bold text-sm shadow-sm">
+                                <option value="">Todas las categorías</option>
+                                <option>Cursos Normativos</option>
+                                <option>Informática y Software</option>
+                                <option>Competencias Transversales</option>
+                                <option>Ventas y Servicios</option>
+                                <option>Salud y Prevención</option>
+                                <option>Academia de Idiomas</option>
+                                <option>Competencias Técnicas</option>
+                                <option>Marketing Digital</option>
+                                <option>Desarrollo Personal</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-gray-400 mb-2 block ml-2">Modalidad</label>
+                            <select id="homeFilterModalidad" class="filter-select w-full bg-white border-none rounded-2xl px-5 py-4 font-bold text-sm shadow-sm">
+                                <option value="">Todas las modalidades</option>
+                                <option>E-learning Asincrónico</option>
+                                <option>Autoinstrucción</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] uppercase font-bold text-gray-400 mb-2 block ml-2">Nivel del Curso</label>
+                            <select id="homeFilterLevel" class="filter-select w-full bg-white border-none rounded-2xl px-5 py-4 font-bold text-sm shadow-sm">
+                                <option value="">Todos los niveles</option>
+                                <option value="1">Nivel 1 (Básico)</option>
+                                <option value="2">Nivel 2 (Intermedio)</option>
+                                <option value="3">Nivel 3 (Avanzado)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-6xl mx-auto px-4">
+                <h3 class="text-left text-xs uppercase font-black tracking-widest text-gray-300 mb-8 ml-2">Explorar por Vertical</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6" id="home-categories"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- VISTA: CATÁLOGO -->
+    <main id="view-catalog" class="hidden py-12 px-6 bg-gray-50 min-h-screen">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+                <div>
+                    <button onclick="showHome()" class="text-umine-sky font-bold flex items-center mb-2 hover:underline">
+                        <i class="fas fa-chevron-left mr-2"></i> Volver
+                    </button>
+                    <h2 class="text-4xl font-black tracking-tight" id="catalog-title">Explorando Cursos</h2>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="exportExcel()" class="bg-umine-green text-white px-6 py-3 rounded-full font-bold flex items-center text-sm shadow-lg shadow-green-900/10 hover:scale-105 transition">
+                        <i class="fas fa-file-excel mr-2"></i> Exportar
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-[2.5rem] shadow-sm mb-12">
+                <div class="flex flex-wrap gap-4 items-end">
+                    <div class="flex-grow min-w-[200px]">
+                        <label class="text-[10px] uppercase font-bold text-gray-400 ml-4 mb-2 block">Palabra clave</label>
+                        <input type="text" id="filterText" oninput="applyFilters()" placeholder="Nombre, Sence..." class="w-full bg-gray-50 border-none rounded-full px-6 py-4 focus:ring-2 focus:ring-umine-sky">
+                    </div>
+                    
+                    <div class="w-full sm:w-56">
+                        <label class="text-[10px] uppercase font-bold text-gray-400 ml-4 mb-2 block">Categoría</label>
+                        <select id="filterCategory" onchange="applyFilters()" class="filter-select w-full bg-gray-50 border-none rounded-full px-6 py-4 font-bold text-sm">
+                            <option value="">Todas</option>
+                            <option>Cursos Normativos</option>
+                            <option>Informática y Software</option>
+                            <option>Competencias Transversales</option>
+                            <option>Ventas y Servicios</option>
+                            <option>Salud y Prevención</option>
+                            <option>Academia de Idiomas</option>
+                            <option>Competencias Técnicas</option>
+                            <option>Marketing Digital</option>
+                            <option>Desarrollo Personal</option>
+                        </select>
+                    </div>
+
+                    <div class="w-full sm:w-48">
+                        <label class="text-[10px] uppercase font-bold text-gray-400 ml-4 mb-2 block">Modalidad</label>
+                        <select id="filterModalidad" onchange="applyFilters()" class="filter-select w-full bg-gray-50 border-none rounded-full px-6 py-4 font-bold text-sm">
+                            <option value="">Cualquiera</option>
+                            <option>E-learning Asincrónico</option>
+                            <option>Autoinstrucción</option>
+                        </select>
+                    </div>
+
+                    <button onclick="resetFilters()" class="px-6 py-4 font-bold text-xs uppercase text-gray-400 hover:text-umine-red transition">
+                        Limpiar
+                    </button>
+                </div>
+            </div>
+
+            <div id="course-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+
+            <div id="empty-results" class="hidden text-center py-20">
+                <i class="fas fa-search text-5xl text-gray-200 mb-6 block"></i>
+                <h4 class="text-xl font-bold text-umine-blue">No encontramos cursos</h4>
+                <p class="text-gray-400">Intenta con otros términos o filtros.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- VISTA: ADMIN -->
+    <main id="view-admin" class="hidden py-12 px-6 bg-gray-100 min-h-screen">
+        <div class="max-w-6xl mx-auto bg-white rounded-[3rem] shadow-2xl overflow-hidden">
+            <div class="p-10 border-b flex justify-between items-center bg-white">
+                <div>
+                    <h2 class="text-3xl font-black">Admin Panel</h2>
+                    <p class="text-gray-400 text-sm">Gestión de base de datos de cursos</p>
+                </div>
+                <button onclick="openFormModal()" class="btn-main">Nuevo Curso</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 text-[10px] uppercase font-black text-gray-400">
+                        <tr>
+                            <th class="p-6">Código SENCE</th>
+                            <th class="p-6">Nombre</th>
+                            <th class="p-6">Categoría</th>
+                            <th class="p-6 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body" class="divide-y divide-gray-50"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL: DETALLE -->
+    <div id="modal-detail" class="hidden fixed inset-0 z-[100] modal-blur flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('modal-detail')" class="absolute top-8 right-8 text-gray-300 hover:text-umine-red text-2xl z-10">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="modal-detail-content"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: FORMULARIO -->
+    <div id="modal-form" class="hidden fixed inset-0 z-[100] modal-blur flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-xl rounded-[3rem] p-10 shadow-2xl overflow-y-auto max-h-[95vh]">
+            <h3 class="text-2xl font-black mb-6" id="form-title">Gestionar Curso</h3>
+            <form id="course-form" class="grid grid-cols-2 gap-4">
+                <input type="hidden" id="edit-id">
+                <div class="col-span-2">
+                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Nombre Comercial</label>
+                    <input type="text" id="f-name" required class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Código SENCE</label>
+                    <input type="text" id="f-sence" required class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Categoría</label>
+                    <select id="f-cat" class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
+                        <option>Cursos Normativos</option>
+                        <option>Informática y Software</option>
+                        <option>Competencias Transversales</option>
+                        <option>Ventas y Servicios</option>
+                        <option>Salud y Prevención</option>
+                        <option>Academia de Idiomas</option>
+                        <option>Competencias Técnicas</option>
+                        <option>Marketing Digital</option>
+                        <option>Desarrollo Personal</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Nivel</label>
+                    <select id="f-level" class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
+                        <option value="1">Nivel 1</option>
+                        <option value="2">Nivel 2</option>
+                        <option value="3">Nivel 3</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Modalidad</label>
+                    <select id="f-mod" class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
+                        <option>E-learning Asincrónico</option>
+                        <option>Autoinstrucción</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Horas</label>
+                    <input type="number" id="f-hours" required class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Valor</label>
+                    <input type="text" id="f-val" required class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
+                </div>
+                <div class="col-span-2">
+                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Descripción</label>
+                    <textarea id="f-desc" rows="3" class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1"></textarea>
+                </div>
+                <div class="col-span-2 flex gap-4 mt-4">
+                    <button type="submit" class="flex-grow btn-main">Guardar</button>
+                    <button type="button" onclick="closeModal('modal-form')" class="px-8 font-bold text-gray-400">Cerrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let db = [
+            { id: "1238042809", name: "Análisis de datos para la toma de decisiones", cat: "Competencias Técnicas", hours: 110, val: "616.000", level: "2", mod: "E-learning Asincrónico", desc: "Conceptos de analítica con Excel, Power BI y Tableau." },
+            { id: "1238031731", name: "Protección para Trabajadores de la Salud", cat: "Salud y Prevención", hours: 46, val: "257.600", level: "1", mod: "E-learning Asincrónico", desc: "Medidas de prevención de agresiones en salud según Norma 28." },
+            { id: "1238030831", name: "Seguridad de la información", cat: "Informática y Software", hours: 68, val: "380.800", level: "2", mod: "Autoinstrucción", desc: "Detección de amenazas y prevención de ciberataques." },
+            { id: "1238051111", name: "Prevención de Delitos Ley 20.393", cat: "Cursos Normativos", hours: 16, val: "89.600", level: "1", mod: "E-learning Asincrónico", desc: "Modelo de prevención de delitos corporativos." },
+            { id: "1238052222", name: "Liderazgo Adaptativo Ágil", cat: "Competencias Transversales", hours: 40, val: "224.000", level: "3", mod: "E-learning Asincrónico", desc: "Gestión de equipos en entornos de incertidumbre." },
+            { id: "1238041573", name: "Comunicación Efectiva", cat: "Ventas y Servicios", hours: 24, val: "560.000", level: "2", mod: "Autoinstrucción", desc: "Habilidades blandas para ventas y atención." }
+        ];
+
+        const catStyles = {
+            'Cursos Normativos': { color: '#da3728', icon: 'fa-gavel' },
+            'Informática y Software': { color: '#00ade1', icon: 'fa-laptop-code' },
+            'Competencias Transversales': { color: '#575e9a', icon: 'fa-users-cog' },
+            'Ventas y Servicios': { color: '#ffcd22', icon: 'fa-hand-holding-usd' },
+            'Salud y Prevención': { color: '#80b122', icon: 'fa-first-aid' },
+            'Academia de Idiomas': { color: '#ff7e5f', icon: 'fa-language' },
+            'Competencias Técnicas': { color: '#2b2d42', icon: 'fa-tools' },
+            'Marketing Digital': { color: '#d90429', icon: 'fa-bullhorn' },
+            'Desarrollo Personal': { color: '#8d99ae', icon: 'fa-seedling' }
+        };
+
+        window.onload = () => {
+            renderHomeCategories();
+        };
+
+        function toggleAdvancedSearch() {
+            document.getElementById('advancedPanelHome').classList.toggle('open');
+        }
+
+        function showHome() {
+            document.getElementById('view-home').classList.remove('hidden');
+            document.getElementById('view-catalog').classList.add('hidden');
+            document.getElementById('view-admin').classList.add('hidden');
+        }
+
+        function showCatalog(cat = null) {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-catalog').classList.remove('hidden');
+            document.getElementById('view-admin').classList.add('hidden');
+            if(cat) {
+                document.getElementById('filterCategory').value = cat;
+                document.getElementById('catalog-title').innerText = cat;
+            }
+            applyFilters();
+        }
+
+        function showAdmin() {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-catalog').classList.add('hidden');
+            document.getElementById('view-admin').classList.remove('hidden');
+            renderAdminTable();
+        }
+
+        function handleQuickSearch() {
+            const query = document.getElementById('quickSearch').value;
+            const cat = document.getElementById('homeFilterCat').value;
+            const mod = document.getElementById('homeFilterModalidad').value;
+            const lvl = document.getElementById('homeFilterLevel').value;
+
+            document.getElementById('filterText').value = query;
+            document.getElementById('filterCategory').value = cat;
+            document.getElementById('filterModalidad').value = mod;
+            showCatalog(cat || null);
+        }
+
+        function applyFilters() {
+            const text = document.getElementById('filterText').value.toLowerCase();
+            const cat = document.getElementById('filterCategory').value;
+            const mod = document.getElementById('filterModalidad').value;
+            const lvl = document.getElementById('homeFilterLevel') ? document.getElementById('homeFilterLevel').value : "";
+
+            const filtered = db.filter(i => {
+                const matchesText = i.name.toLowerCase().includes(text) || i.id.includes(text);
+                const matchesCat = !cat || i.cat === cat;
+                const matchesMod = !mod || i.mod === mod;
+                const matchesLvl = !lvl || i.level === lvl;
+                return matchesText && matchesCat && matchesMod && matchesLvl;
+            });
+
+            renderCatalogGrid(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('filterText').value = "";
+            document.getElementById('filterCategory').value = "";
+            document.getElementById('filterModalidad').value = "";
+            applyFilters();
+        }
+
+        function renderHomeCategories() {
+            const container = document.getElementById('home-categories');
+            container.innerHTML = Object.keys(catStyles).map(key => `
+                <div onclick="showCatalog('${key}')" class="cat-card shadow-lg shadow-gray-100" style="background-color: ${catStyles[key].color}">
+                    <i class="fas ${catStyles[key].icon} text-3xl mb-3"></i>
+                    <span class="font-bold text-[10px] uppercase tracking-tighter leading-tight">${key}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderCatalogGrid(data) {
+            const grid = document.getElementById('course-grid');
+            const empty = document.getElementById('empty-results');
+            
+            if(data.length === 0) {
+                grid.innerHTML = "";
+                empty.classList.remove('hidden');
+                return;
+            }
+            
+            empty.classList.add('hidden');
+            grid.innerHTML = data.map(i => `
+                <div class="card-course p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase text-white" style="background-color: ${catStyles[i.cat]?.color}">
+                            ${i.cat}
+                        </span>
+                        <span class="text-[10px] font-bold text-gray-300">NIVEL ${i.level}</span>
+                    </div>
+                    <h3 class="text-xl font-black mb-2 leading-tight min-h-[3rem]">${i.name}</h3>
+                    <div class="text-[10px] font-bold text-umine-sky mb-4 uppercase tracking-widest">${i.mod}</div>
+                    <p class="text-gray-400 text-sm mb-8 line-clamp-2">${i.desc}</p>
+                    
+                    <div class="mt-auto pt-6 border-t border-gray-50 flex justify-between items-end">
+                        <div>
+                            <span class="block text-[9px] uppercase font-bold text-gray-300 mb-1">Inversión</span>
+                            <span class="text-2xl font-black text-umine-blue">$${i.val}</span>
+                        </div>
+                        <button onclick='openDetail(${JSON.stringify(i)})' class="bg-gray-100 p-4 rounded-full hover:bg-umine-blue hover:text-white transition">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openDetail(i) {
+            const content = document.getElementById('modal-detail-content');
+            content.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2">
+                    <div class="p-10 md:p-16">
+                        <h2 class="text-3xl font-black mb-4">${i.name}</h2>
+                        <div class="flex gap-2 mb-6">
+                            <span class="bg-gray-100 px-3 py-1 rounded text-[10px] font-bold uppercase">${i.mod}</span>
+                            <span class="bg-gray-100 px-3 py-1 rounded text-[10px] font-bold uppercase">Nivel ${i.level}</span>
+                        </div>
+                        <p class="text-gray-500 mb-8 leading-relaxed">${i.desc}</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-4 rounded-2xl">
+                                <div class="text-[9px] font-bold text-gray-400 uppercase">Código SENCE</div>
+                                <div class="font-black">${i.id}</div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-2xl">
+                                <div class="text-[9px] font-bold text-gray-400 uppercase">Horas</div>
+                                <div class="font-black">${i.hours} Hrs</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 p-10 flex flex-col justify-center items-center text-center">
+                        <div class="text-5xl font-black text-umine-blue mb-2">$${i.val}</div>
+                        <div class="text-xs font-bold text-gray-400 uppercase mb-10">Valor Imputable SENCE</div>
+                        
+                        <!-- BOTONES ACTUALIZADOS -->
+                        <div class="flex flex-col gap-3 w-full max-w-xs">
+                            <button onclick="window.print()" class="btn-outline flex items-center justify-center gap-2">
+                                <i class="fas fa-file-pdf"></i> Descargar ficha (PDF)
+                            </button>
+                            <button onclick="window.open('#', '_blank')" class="btn-main flex items-center justify-center gap-2">
+                                <i class="fas fa-external-link-alt"></i> Ver más (Web)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal-detail').classList.remove('hidden');
+        }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('admin-table-body');
+            tbody.innerHTML = db.map((i, index) => `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-6 font-bold text-gray-400">${i.id}</td>
+                    <td class="p-6 font-bold">${i.name}</td>
+                    <td class="p-6"><span class="text-[10px] font-bold bg-gray-100 px-2 py-1 rounded">${i.cat}</span></td>
+                    <td class="p-6 text-right">
+                        <button class="text-gray-300 hover:text-umine-sky p-2"><i class="fas fa-edit"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
