@@ -6,7 +6,6 @@
     <title>Umine - Catálogo Avanzado SENCE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap');
         
@@ -23,6 +22,7 @@
             font-family: 'Lexend', sans-serif;
             color: var(--umine-blue);
             background-color: #fff;
+            overflow-x: hidden;
         }
 
         .bg-umine-blue { background-color: var(--umine-blue); }
@@ -35,19 +35,12 @@
             background: white;
             display: flex;
             flex-direction: column;
+            height: 100%;
         }
         
         .card-course:hover {
             transform: translateY(-8px);
             box-shadow: 0 20px 40px -15px rgba(29, 42, 78, 0.12);
-        }
-
-        .filter-select {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%231d2a4e'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 1em;
         }
 
         .btn-main {
@@ -58,31 +51,17 @@
             font-weight: 700;
             transition: all 0.3s ease;
             text-align: center;
+            cursor: pointer;
+            border: none;
         }
 
         .btn-main:hover {
             background-color: var(--umine-sky);
-            transform: translateY(-2px);
-        }
-
-        .btn-outline {
-            border: 2px solid var(--umine-blue);
-            color: var(--umine-blue);
-            padding: 0.75rem 1.5rem;
-            border-radius: 9999px;
-            font-weight: 700;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-
-        .btn-outline:hover {
-            background-color: var(--umine-blue);
-            color: white;
         }
 
         .modal-blur {
-            backdrop-filter: blur(8px);
-            background: rgba(29, 42, 78, 0.4);
+            backdrop-filter: blur(12px);
+            background: rgba(29, 42, 78, 0.6);
         }
 
         .cat-card {
@@ -99,29 +78,21 @@
             padding: 1.25rem;
         }
 
-        .cat-card:hover {
-            transform: scale(1.03);
-            filter: brightness(1.05);
-        }
-
-        .advanced-filter-panel {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease-out, opacity 0.3s ease;
-            opacity: 0;
-        }
-
-        .advanced-filter-panel.open {
-            max-height: 500px;
-            opacity: 1;
-            margin-top: 1.5rem;
+        /* ESTILOS DE IMPRESIÓN */
+        @media print {
+            @page { margin: 1cm; size: portrait; }
+            nav, .no-print, button, i.fa-times { display: none !important; }
+            body, html { background: white !important; overflow: visible !important; }
+            .modal-blur { position: absolute !important; background: white !important; display: block !important; width: 100% !important; }
+            #modal-detail { position: relative !important; display: block !important; overflow: visible !important; }
+            #modal-detail > div { box-shadow: none !important; border: none !important; width: 100% !important; margin: 0 !important; }
         }
     </style>
 </head>
 <body class="pt-20">
 
     <!-- NAVEGACIÓN -->
-    <nav class="fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 py-4 px-8">
+    <nav class="fixed top-0 left-0 w-full z-[60] bg-white/90 backdrop-blur-md border-b border-gray-100 py-4 px-8 no-print">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="text-2xl font-black text-umine-blue tracking-tighter cursor-pointer" onclick="showHome()">umine</div>
             <div class="flex items-center gap-6">
@@ -133,7 +104,7 @@
     </nav>
 
     <!-- VISTA: HOME -->
-    <main id="view-home" class="block">
+    <main id="view-home" class="block no-print">
         <section class="py-20 px-6 text-center">
             <h1 class="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6">Potencia el talento <br><span class="text-umine-sky">de tu equipo</span></h1>
             <p class="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-12">Catálogo interactivo 2025. Cursos con financiamiento SENCE para cada área de tu empresa.</p>
@@ -144,47 +115,7 @@
                         <input type="text" id="quickSearch" placeholder="Busca por nombre o código SENCE..." class="w-full py-5 pl-14 pr-6 rounded-full border-2 border-gray-100 focus:border-umine-sky focus:ring-0 text-lg shadow-xl shadow-blue-900/5">
                         <i class="fas fa-search absolute left-6 top-1/2 -translate-y-1/2 text-gray-300"></i>
                     </div>
-                    <button onclick="toggleAdvancedSearch()" class="flex items-center gap-2 bg-gray-50 text-umine-blue px-6 py-5 rounded-full font-bold text-sm hover:bg-gray-100 transition whitespace-nowrap">
-                        <i class="fas fa-sliders-h"></i> <span class="hidden sm:inline">Búsqueda Avanzada</span>
-                    </button>
                     <button onclick="handleQuickSearch()" class="bg-umine-blue text-white px-8 py-5 rounded-full font-bold hover:shadow-lg transition">Buscar</button>
-                </div>
-
-                <div id="advancedPanelHome" class="advanced-filter-panel bg-gray-50 rounded-[2.5rem] p-8 text-left border border-gray-100">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label class="text-[10px] uppercase font-bold text-gray-400 mb-2 block ml-2">Vertical o Categoría</label>
-                            <select id="homeFilterCat" class="filter-select w-full bg-white border-none rounded-2xl px-5 py-4 font-bold text-sm shadow-sm">
-                                <option value="">Todas las categorías</option>
-                                <option>Cursos Normativos</option>
-                                <option>Informática y Software</option>
-                                <option>Competencias Transversales</option>
-                                <option>Ventas y Servicios</option>
-                                <option>Salud y Prevención</option>
-                                <option>Academia de Idiomas</option>
-                                <option>Competencias Técnicas</option>
-                                <option>Marketing Digital</option>
-                                <option>Desarrollo Personal</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[10px] uppercase font-bold text-gray-400 mb-2 block ml-2">Modalidad</label>
-                            <select id="homeFilterModalidad" class="filter-select w-full bg-white border-none rounded-2xl px-5 py-4 font-bold text-sm shadow-sm">
-                                <option value="">Todas las modalidades</option>
-                                <option>E-learning Asincrónico</option>
-                                <option>Autoinstrucción</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[10px] uppercase font-bold text-gray-400 mb-2 block ml-2">Nivel del Curso</label>
-                            <select id="homeFilterLevel" class="filter-select w-full bg-white border-none rounded-2xl px-5 py-4 font-bold text-sm shadow-sm">
-                                <option value="">Todos los niveles</option>
-                                <option value="1">Nivel 1 (Básico)</option>
-                                <option value="2">Nivel 2 (Intermedio)</option>
-                                <option value="3">Nivel 3 (Avanzado)</option>
-                            </select>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -196,7 +127,7 @@
     </main>
 
     <!-- VISTA: CATÁLOGO -->
-    <main id="view-catalog" class="hidden py-12 px-6 bg-gray-50 min-h-screen">
+    <main id="view-catalog" class="hidden py-12 px-6 bg-gray-50 min-h-screen no-print">
         <div class="max-w-7xl mx-auto">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
                 <div>
@@ -205,68 +136,18 @@
                     </button>
                     <h2 class="text-4xl font-black tracking-tight" id="catalog-title">Explorando Cursos</h2>
                 </div>
-                <div class="flex gap-3">
-                    <button onclick="exportExcel()" class="bg-umine-green text-white px-6 py-3 rounded-full font-bold flex items-center text-sm shadow-lg shadow-green-900/10 hover:scale-105 transition">
-                        <i class="fas fa-file-excel mr-2"></i> Exportar
-                    </button>
-                </div>
             </div>
-
-            <div class="bg-white p-6 rounded-[2.5rem] shadow-sm mb-12">
-                <div class="flex flex-wrap gap-4 items-end">
-                    <div class="flex-grow min-w-[200px]">
-                        <label class="text-[10px] uppercase font-bold text-gray-400 ml-4 mb-2 block">Palabra clave</label>
-                        <input type="text" id="filterText" oninput="applyFilters()" placeholder="Nombre, Sence..." class="w-full bg-gray-50 border-none rounded-full px-6 py-4 focus:ring-2 focus:ring-umine-sky">
-                    </div>
-                    
-                    <div class="w-full sm:w-56">
-                        <label class="text-[10px] uppercase font-bold text-gray-400 ml-4 mb-2 block">Categoría</label>
-                        <select id="filterCategory" onchange="applyFilters()" class="filter-select w-full bg-gray-50 border-none rounded-full px-6 py-4 font-bold text-sm">
-                            <option value="">Todas</option>
-                            <option>Cursos Normativos</option>
-                            <option>Informática y Software</option>
-                            <option>Competencias Transversales</option>
-                            <option>Ventas y Servicios</option>
-                            <option>Salud y Prevención</option>
-                            <option>Academia de Idiomas</option>
-                            <option>Competencias Técnicas</option>
-                            <option>Marketing Digital</option>
-                            <option>Desarrollo Personal</option>
-                        </select>
-                    </div>
-
-                    <div class="w-full sm:w-48">
-                        <label class="text-[10px] uppercase font-bold text-gray-400 ml-4 mb-2 block">Modalidad</label>
-                        <select id="filterModalidad" onchange="applyFilters()" class="filter-select w-full bg-gray-50 border-none rounded-full px-6 py-4 font-bold text-sm">
-                            <option value="">Cualquiera</option>
-                            <option>E-learning Asincrónico</option>
-                            <option>Autoinstrucción</option>
-                        </select>
-                    </div>
-
-                    <button onclick="resetFilters()" class="px-6 py-4 font-bold text-xs uppercase text-gray-400 hover:text-umine-red transition">
-                        Limpiar
-                    </button>
-                </div>
-            </div>
-
             <div id="course-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
-
-            <div id="empty-results" class="hidden text-center py-20">
-                <i class="fas fa-search text-5xl text-gray-200 mb-6 block"></i>
-                <h4 class="text-xl font-bold text-umine-blue">No encontramos cursos</h4>
-                <p class="text-gray-400">Intenta con otros términos o filtros.</p>
-            </div>
         </div>
     </main>
 
     <!-- VISTA: ADMIN -->
-    <main id="view-admin" class="hidden py-12 px-6 bg-gray-100 min-h-screen">
+    <main id="view-admin" class="hidden py-12 px-6 bg-gray-100 min-h-screen no-print">
         <div class="max-w-6xl mx-auto bg-white rounded-[3rem] shadow-2xl overflow-hidden">
             <div class="p-10 border-b flex justify-between items-center bg-white">
                 <div>
-                    <h2 class="text-3xl font-black">Admin Panel</h2>
-                    <p class="text-gray-400 text-sm">Gestión de base de datos de cursos</p>
+                    <h2 class="text-3xl font-black">Panel Admin</h2>
+                    <p class="text-gray-400 text-sm">Gestión de base de datos</p>
                 </div>
                 <button onclick="openFormModal()" class="btn-main">Nuevo Curso</button>
             </div>
@@ -286,168 +167,96 @@
         </div>
     </main>
 
-    <!-- MODAL: DETALLE -->
-    <div id="modal-detail" class="hidden fixed inset-0 z-[100] modal-blur flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden relative max-h-[90vh] overflow-y-auto">
-            <button onclick="closeModal('modal-detail')" class="absolute top-8 right-8 text-gray-300 hover:text-umine-red text-2xl z-10">
+    <!-- MODAL: DETALLE (CORREGIDO) -->
+    <div id="modal-detail" class="hidden fixed inset-0 z-[100] modal-blur flex items-center justify-center overflow-hidden">
+        <!-- Fondo clickeable para cerrar -->
+        <div class="absolute inset-0" onclick="closeModal('modal-detail')"></div>
+        
+        <div class="bg-white w-full max-w-5xl h-[90vh] rounded-[3rem] shadow-2xl relative flex flex-col z-10 mx-4">
+            <!-- Botón Cerrar Fijo -->
+            <button onclick="closeModal('modal-detail')" class="absolute top-6 right-8 text-gray-400 hover:text-umine-red text-3xl z-50 transition no-print bg-white/80 rounded-full w-12 h-12 flex items-center justify-center shadow-sm">
                 <i class="fas fa-times"></i>
             </button>
-            <div id="modal-detail-content"></div>
+
+            <!-- Contenido con Scroll Propio -->
+            <div id="modal-detail-scroll" class="flex-grow overflow-y-auto p-8 md:p-14 custom-scrollbar">
+                <div id="modal-detail-content"></div>
+            </div>
         </div>
     </div>
 
-    <!-- MODAL: FORMULARIO -->
+    <!-- MODAL: FORMULARIO ADMIN -->
     <div id="modal-form" class="hidden fixed inset-0 z-[100] modal-blur flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-xl rounded-[3rem] p-10 shadow-2xl overflow-y-auto max-h-[95vh]">
+        <div class="bg-white w-full max-w-3xl rounded-[3rem] p-10 shadow-2xl overflow-y-auto max-h-[95vh] relative z-10">
             <h3 class="text-2xl font-black mb-6" id="form-title">Gestionar Curso</h3>
-            <form id="course-form" class="grid grid-cols-2 gap-4">
+            <form id="course-form" class="grid grid-cols-2 gap-6">
                 <input type="hidden" id="edit-id">
-                <div class="col-span-2">
-                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Nombre Comercial</label>
-                    <input type="text" id="f-name" required class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Código SENCE</label>
-                    <input type="text" id="f-sence" required class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Categoría</label>
-                    <select id="f-cat" class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
-                        <option>Cursos Normativos</option>
-                        <option>Informática y Software</option>
-                        <option>Competencias Transversales</option>
-                        <option>Ventas y Servicios</option>
-                        <option>Salud y Prevención</option>
-                        <option>Academia de Idiomas</option>
-                        <option>Competencias Técnicas</option>
-                        <option>Marketing Digital</option>
-                        <option>Desarrollo Personal</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Nivel</label>
-                    <select id="f-level" class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
-                        <option value="1">Nivel 1</option>
-                        <option value="2">Nivel 2</option>
-                        <option value="3">Nivel 3</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Modalidad</label>
-                    <select id="f-mod" class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
-                        <option>E-learning Asincrónico</option>
-                        <option>Autoinstrucción</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Horas</label>
-                    <input type="number" id="f-hours" required class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Valor</label>
-                    <input type="text" id="f-val" required class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
-                </div>
-                <div class="col-span-2">
-                    <label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Descripción</label>
-                    <textarea id="f-desc" rows="3" class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1"></textarea>
-                </div>
-                <div class="col-span-2 flex gap-4 mt-4">
-                    <button type="submit" class="flex-grow btn-main">Guardar</button>
-                    <button type="button" onclick="closeModal('modal-form')" class="px-8 font-bold text-gray-400">Cerrar</button>
-                </div>
+                <div class="col-span-2"><label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Nombre</label><input type="text" id="f-name" required class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1"></div>
+                <div><label class="text-[10px] uppercase font-bold text-gray-400 ml-2">SENCE</label><input type="text" id="f-sence" required class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1"></div>
+                <div><label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Categoría</label><select id="f-cat" class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1">
+                    <option>Cursos Normativos</option>
+                    <option>Informática y Software</option>
+                    <option>Competencias Transversales</option>
+                    <option>Ventas y Servicios</option>
+                    <option>Salud y Prevención</option>
+                    <option>Competencias Técnicas</option>
+                    <option>Idiomas</option>
+                </select></div>
+                <div class="col-span-2"><label class="text-[10px] uppercase font-bold text-gray-400 ml-2">Descripción</label><textarea id="f-desc" rows="3" class="w-full bg-gray-50 border-none rounded-2xl p-4 mt-1"></textarea></div>
+                <div class="col-span-2 border-t pt-6"><div id="modules-container" class="space-y-4"></div><button type="button" onclick="addModuleInput()" class="mt-4 text-xs font-bold text-umine-sky">+ Añadir Módulo</button></div>
+                <div class="col-span-2 flex gap-4 mt-4"><button type="submit" class="flex-grow btn-main">Guardar</button><button type="button" onclick="closeModal('modal-form')" class="px-8 font-bold text-gray-400">Cancelar</button></div>
             </form>
         </div>
     </div>
 
     <script>
-        let db = [
-            { id: "1238042809", name: "Análisis de datos para la toma de decisiones", cat: "Competencias Técnicas", hours: 110, val: "616.000", level: "2", mod: "E-learning Asincrónico", desc: "Conceptos de analítica con Excel, Power BI y Tableau." },
-            { id: "1238031731", name: "Protección para Trabajadores de la Salud", cat: "Salud y Prevención", hours: 46, val: "257.600", level: "1", mod: "E-learning Asincrónico", desc: "Medidas de prevención de agresiones en salud según Norma 28." },
-            { id: "1238030831", name: "Seguridad de la información", cat: "Informática y Software", hours: 68, val: "380.800", level: "2", mod: "Autoinstrucción", desc: "Detección de amenazas y prevención de ciberataques." },
-            { id: "1238051111", name: "Prevención de Delitos Ley 20.393", cat: "Cursos Normativos", hours: 16, val: "89.600", level: "1", mod: "E-learning Asincrónico", desc: "Modelo de prevención de delitos corporativos." },
-            { id: "1238052222", name: "Liderazgo Adaptativo Ágil", cat: "Competencias Transversales", hours: 40, val: "224.000", level: "3", mod: "E-learning Asincrónico", desc: "Gestión de equipos en entornos de incertidumbre." },
-            { id: "1238041573", name: "Comunicación Efectiva", cat: "Ventas y Servicios", hours: 24, val: "560.000", level: "2", mod: "Autoinstrucción", desc: "Habilidades blandas para ventas y atención." }
-        ];
-
         const catStyles = {
             'Cursos Normativos': { color: '#da3728', icon: 'fa-gavel' },
             'Informática y Software': { color: '#00ade1', icon: 'fa-laptop-code' },
             'Competencias Transversales': { color: '#575e9a', icon: 'fa-users-cog' },
             'Ventas y Servicios': { color: '#ffcd22', icon: 'fa-hand-holding-usd' },
             'Salud y Prevención': { color: '#80b122', icon: 'fa-first-aid' },
-            'Academia de Idiomas': { color: '#ff7e5f', icon: 'fa-language' },
             'Competencias Técnicas': { color: '#2b2d42', icon: 'fa-tools' },
-            'Marketing Digital': { color: '#d90429', icon: 'fa-bullhorn' },
-            'Desarrollo Personal': { color: '#8d99ae', icon: 'fa-seedling' }
+            'Idiomas': { color: '#6a4c93', icon: 'fa-language' }
         };
 
-        window.onload = () => {
-            renderHomeCategories();
-        };
-
-        function toggleAdvancedSearch() {
-            document.getElementById('advancedPanelHome').classList.toggle('open');
-        }
-
-        function showHome() {
-            document.getElementById('view-home').classList.remove('hidden');
-            document.getElementById('view-catalog').classList.add('hidden');
-            document.getElementById('view-admin').classList.add('hidden');
-        }
-
-        function showCatalog(cat = null) {
-            document.getElementById('view-home').classList.add('hidden');
-            document.getElementById('view-catalog').classList.remove('hidden');
-            document.getElementById('view-admin').classList.add('hidden');
-            if(cat) {
-                document.getElementById('filterCategory').value = cat;
-                document.getElementById('catalog-title').innerText = cat;
+        let db = [
+            { 
+                id: "1238031731", 
+                name: "Protección para Trabajadores de la Salud (Norma 28)", 
+                cat: "Salud y Prevención", 
+                hours: 46, val: "257.600", level: "1", mod: "E-learning Asincrónico", 
+                desc: "Protocolos de prevención de agresiones en salud según Norma 28.",
+                modules: [
+                    { title: "Módulo 1: Factores de Riesgo", content: "Evaluación de riesgos y clasificación de agresiones físicas y psicológicas." },
+                    { title: "Módulo 2: Prevención de Agresiones", content: "Medidas de prevención, trabajo con comunidad y manejo de escalas de violencia." }
+                ]
+            },
+            { 
+                id: "1238030831", 
+                name: "Seguridad de la Información", 
+                cat: "Informática y Software", 
+                hours: 68, val: "380.800", level: "1", mod: "E-learning Asincrónico", 
+                desc: "Mecanismos para detectar amenazas y proteger dispositivos del uso malicioso de datos.",
+                modules: [
+                    { title: "Módulo 1: Peligros de Internet", content: "Phishing, Vishing y Ransomware. Confidencialidad e integridad." },
+                    { title: "Módulo 2: Herramientas de Protección", content: "Navegación segura, protección de cuentas y prevención de ciberataques." }
+                ]
+            },
+            { 
+                id: "1238031548", 
+                name: "Excel Intermedio", 
+                cat: "Informática y Software", 
+                hours: 120, val: "480.000", level: "2", mod: "E-learning Asincrónico", 
+                desc: "Uso avanzado de herramientas de Excel para la automatización de procesos administrativos.",
+                modules: [
+                    { title: "Módulo 1: Funciones Lógicas", content: "Uso de SI, BUSCARV y funciones de texto avanzadas." },
+                    { title: "Módulo 2: Tablas Dinámicas", content: "Gestión de bases de datos masivas y creación de reportes dinámicos." }
+                ]
             }
-            applyFilters();
-        }
+        ];
 
-        function showAdmin() {
-            document.getElementById('view-home').classList.add('hidden');
-            document.getElementById('view-catalog').classList.add('hidden');
-            document.getElementById('view-admin').classList.remove('hidden');
-            renderAdminTable();
-        }
-
-        function handleQuickSearch() {
-            const query = document.getElementById('quickSearch').value;
-            const cat = document.getElementById('homeFilterCat').value;
-            const mod = document.getElementById('homeFilterModalidad').value;
-            const lvl = document.getElementById('homeFilterLevel').value;
-
-            document.getElementById('filterText').value = query;
-            document.getElementById('filterCategory').value = cat;
-            document.getElementById('filterModalidad').value = mod;
-            showCatalog(cat || null);
-        }
-
-        function applyFilters() {
-            const text = document.getElementById('filterText').value.toLowerCase();
-            const cat = document.getElementById('filterCategory').value;
-            const mod = document.getElementById('filterModalidad').value;
-            const lvl = document.getElementById('homeFilterLevel') ? document.getElementById('homeFilterLevel').value : "";
-
-            const filtered = db.filter(i => {
-                const matchesText = i.name.toLowerCase().includes(text) || i.id.includes(text);
-                const matchesCat = !cat || i.cat === cat;
-                const matchesMod = !mod || i.mod === mod;
-                const matchesLvl = !lvl || i.level === lvl;
-                return matchesText && matchesCat && matchesMod && matchesLvl;
-            });
-
-            renderCatalogGrid(filtered);
-        }
-
-        function resetFilters() {
-            document.getElementById('filterText').value = "";
-            document.getElementById('filterCategory').value = "";
-            document.getElementById('filterModalidad').value = "";
-            applyFilters();
-        }
+        window.onload = () => { renderHomeCategories(); };
 
         function renderHomeCategories() {
             const container = document.getElementById('home-categories');
@@ -461,98 +270,186 @@
 
         function renderCatalogGrid(data) {
             const grid = document.getElementById('course-grid');
-            const empty = document.getElementById('empty-results');
-            
-            if(data.length === 0) {
-                grid.innerHTML = "";
-                empty.classList.remove('hidden');
+            if (data.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-20 text-center text-gray-400">No se encontraron cursos coincidentes.</div>`;
                 return;
             }
-            
-            empty.classList.add('hidden');
-            grid.innerHTML = data.map(i => `
+            grid.innerHTML = data.map((i) => {
+                const realIndex = db.findIndex(item => item.id === i.id);
+                return `
                 <div class="card-course p-8">
                     <div class="flex justify-between items-center mb-6">
                         <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase text-white" style="background-color: ${catStyles[i.cat]?.color}">
                             ${i.cat}
                         </span>
-                        <span class="text-[10px] font-bold text-gray-300">NIVEL ${i.level}</span>
                     </div>
                     <h3 class="text-xl font-black mb-2 leading-tight min-h-[3rem]">${i.name}</h3>
-                    <div class="text-[10px] font-bold text-umine-sky mb-4 uppercase tracking-widest">${i.mod}</div>
                     <p class="text-gray-400 text-sm mb-8 line-clamp-2">${i.desc}</p>
-                    
-                    <div class="mt-auto pt-6 border-t border-gray-50 flex justify-between items-end">
-                        <div>
-                            <span class="block text-[9px] uppercase font-bold text-gray-300 mb-1">Inversión</span>
-                            <span class="text-2xl font-black text-umine-blue">$${i.val}</span>
-                        </div>
-                        <button onclick='openDetail(${JSON.stringify(i)})' class="bg-gray-100 p-4 rounded-full hover:bg-umine-blue hover:text-white transition">
+                    <div class="mt-auto pt-6 border-t border-gray-50 flex justify-between items-center">
+                        <div class="text-[10px] font-bold text-umine-sky uppercase tracking-widest">${i.mod}</div>
+                        <button onclick="openDetail(${realIndex})" class="bg-gray-100 p-4 rounded-full hover:bg-umine-blue hover:text-white transition cursor-pointer">
                             <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
-        function openDetail(i) {
+        function openDetail(index) {
+            const i = db[index];
             const content = document.getElementById('modal-detail-content');
-            content.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2">
-                    <div class="p-10 md:p-16">
-                        <h2 class="text-3xl font-black mb-4">${i.name}</h2>
-                        <div class="flex gap-2 mb-6">
-                            <span class="bg-gray-100 px-3 py-1 rounded text-[10px] font-bold uppercase">${i.mod}</span>
-                            <span class="bg-gray-100 px-3 py-1 rounded text-[10px] font-bold uppercase">Nivel ${i.level}</span>
-                        </div>
-                        <p class="text-gray-500 mb-8 leading-relaxed">${i.desc}</p>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-gray-50 p-4 rounded-2xl">
-                                <div class="text-[9px] font-bold text-gray-400 uppercase">Código SENCE</div>
-                                <div class="font-black">${i.id}</div>
-                            </div>
-                            <div class="bg-gray-50 p-4 rounded-2xl">
-                                <div class="text-[9px] font-bold text-gray-400 uppercase">Horas</div>
-                                <div class="font-black">${i.hours} Hrs</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 p-10 flex flex-col justify-center items-center text-center">
-                        <div class="text-5xl font-black text-umine-blue mb-2">$${i.val}</div>
-                        <div class="text-xs font-bold text-gray-400 uppercase mb-10">Valor Imputable SENCE</div>
-                        
-                        <!-- BOTONES ACTUALIZADOS -->
-                        <div class="flex flex-col gap-3 w-full max-w-xs">
-                            <button onclick="window.print()" class="btn-outline flex items-center justify-center gap-2">
-                                <i class="fas fa-file-pdf"></i> Descargar ficha (PDF)
-                            </button>
-                            <button onclick="window.open('#', '_blank')" class="btn-main flex items-center justify-center gap-2">
-                                <i class="fas fa-external-link-alt"></i> Ver más (Web)
-                            </button>
+            const modulesHtml = (i.modules || []).map((m, idx) => `
+                <div class="border-b border-gray-50 py-6 last:border-0">
+                    <div class="flex gap-4">
+                        <span class="text-umine-sky font-black text-lg">0${idx+1}</span>
+                        <div>
+                            <h4 class="font-bold text-umine-blue mb-2">${m.title}</h4>
+                            <p class="text-gray-400 text-sm whitespace-pre-line">${m.content}</p>
                         </div>
                     </div>
                 </div>
+            `).join('');
+
+            content.innerHTML = `
+                <div class="flex flex-col gap-10">
+                    <div>
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="text-umine-sky font-black text-xs tracking-widest uppercase">${i.cat}</span>
+                            <span class="text-gray-400 font-bold text-xs uppercase">Código SENCE: ${i.id}</span>
+                        </div>
+                        <h2 class="text-4xl font-black text-umine-blue mb-6 leading-tight">${i.name}</h2>
+                        <p class="text-gray-500 text-lg leading-relaxed">${i.desc}</p>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 no-print">
+                        <div class="bg-gray-50 p-6 rounded-3xl"><div class="text-[9px] text-gray-400 uppercase font-bold">Modalidad</div><div class="font-black">${i.mod}</div></div>
+                        <div class="bg-gray-50 p-6 rounded-3xl"><div class="text-[9px] text-gray-400 uppercase font-bold">Horas</div><div class="font-black">${i.hours}</div></div>
+                        <div class="bg-gray-50 p-6 rounded-3xl"><div class="text-[9px] text-gray-400 uppercase font-bold">Nivel</div><div class="font-black">${i.level}</div></div>
+                        <div class="bg-gray-50 p-6 rounded-3xl"><div class="text-[9px] text-gray-400 uppercase font-bold">Valor</div><div class="font-black">$${i.val}</div></div>
+                    </div>
+                    <div class="bg-white rounded-[2.5rem] border border-gray-100 p-8 md:p-10">
+                        <h3 class="text-xl font-black mb-8">Estructura del Programa</h3>
+                        <div>${modulesHtml}</div>
+                    </div>
+                    <div class="flex justify-between items-center border-t pt-8 pb-4 no-print">
+                        <button onclick="handlePrint()" class="btn-main"><i class="fas fa-print mr-2"></i>Imprimir Ficha</button>
+                        <span class="text-[10px] text-gray-300 font-bold">UMINE 2025</span>
+                    </div>
+                </div>
             `;
-            document.getElementById('modal-detail').classList.remove('hidden');
+            
+            const modal = document.getElementById('modal-detail');
+            modal.classList.remove('hidden');
+            // Reiniciar scroll del modal al inicio
+            document.getElementById('modal-detail-scroll').scrollTop = 0;
+            // Bloquear scroll de la página
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            // Devolver scroll a la página
+            document.body.style.overflow = 'auto';
+        }
+
+        function handlePrint() {
+            window.focus();
+            setTimeout(() => { window.print(); }, 100);
+        }
+
+        function handleQuickSearch() {
+            const query = document.getElementById('quickSearch').value.toLowerCase();
+            const filtered = db.filter(i => i.name.toLowerCase().includes(query) || i.id.includes(query));
+            showCatalog();
+            renderCatalogGrid(filtered);
+        }
+
+        function showHome() {
+            document.getElementById('view-home').classList.remove('hidden');
+            document.getElementById('view-catalog').classList.add('hidden');
+            document.getElementById('view-admin').classList.add('hidden');
+        }
+
+        function showCatalog(cat = null) {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-catalog').classList.remove('hidden');
+            document.getElementById('view-admin').classList.add('hidden');
+            const title = document.getElementById('catalog-title');
+            if(cat) {
+                title.innerText = cat;
+                renderCatalogGrid(db.filter(i => i.cat === cat));
+            } else {
+                title.innerText = "Catálogo Completo";
+                renderCatalogGrid(db);
+            }
+        }
+
+        function showAdmin() {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-catalog').classList.add('hidden');
+            document.getElementById('view-admin').classList.remove('hidden');
+            renderAdminTable();
         }
 
         function renderAdminTable() {
             const tbody = document.getElementById('admin-table-body');
-            tbody.innerHTML = db.map((i, index) => `
-                <tr class="hover:bg-gray-50">
+            tbody.innerHTML = db.map((i, idx) => `
+                <tr>
                     <td class="p-6 font-bold text-gray-400">${i.id}</td>
                     <td class="p-6 font-bold">${i.name}</td>
                     <td class="p-6"><span class="text-[10px] font-bold bg-gray-100 px-2 py-1 rounded">${i.cat}</span></td>
                     <td class="p-6 text-right">
-                        <button class="text-gray-300 hover:text-umine-sky p-2"><i class="fas fa-edit"></i></button>
+                        <button onclick="openFormModal(${idx})" class="text-gray-300 hover:text-umine-sky p-2 cursor-pointer border-none bg-transparent"><i class="fas fa-edit"></i></button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
+        function openFormModal(index = null) {
+            const form = document.getElementById('course-form');
+            form.reset();
+            document.getElementById('modules-container').innerHTML = '';
+            if (index !== null) {
+                const i = db[index];
+                document.getElementById('edit-id').value = index;
+                document.getElementById('f-name').value = i.name;
+                document.getElementById('f-sence').value = i.id;
+                document.getElementById('f-cat').value = i.cat;
+                document.getElementById('f-desc').value = i.desc;
+                (i.modules || []).forEach(m => addModuleInput(m.title, m.content));
+            } else {
+                document.getElementById('edit-id').value = "";
+                addModuleInput();
+            }
+            document.getElementById('modal-form').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         }
+
+        function addModuleInput(t='', c='') {
+            const div = document.createElement('div');
+            div.className = "p-4 bg-gray-50 rounded-2xl relative border";
+            div.innerHTML = `<input type="text" placeholder="Título" value="${t}" class="m-t w-full mb-2 p-2 rounded border border-gray-200"><textarea placeholder="Contenido" class="m-c w-full p-2 rounded border border-gray-200">${c}</textarea>`;
+            document.getElementById('modules-container').appendChild(div);
+        }
+
+        document.getElementById('course-form').onsubmit = (e) => {
+            e.preventDefault();
+            const editIdx = document.getElementById('edit-id').value;
+            const modules = Array.from(document.querySelectorAll('#modules-container > div')).map(d => ({
+                title: d.querySelector('.m-t').value,
+                content: d.querySelector('.m-c').value
+            }));
+            const data = {
+                id: document.getElementById('f-sence').value,
+                name: document.getElementById('f-name').value,
+                cat: document.getElementById('f-cat').value,
+                desc: document.getElementById('f-desc').value,
+                modules: modules,
+                hours: 40, val: "200.000", level: "1", mod: "E-learning"
+            };
+            if(editIdx !== "") db[editIdx] = data; else db.push(data);
+            closeModal('modal-form');
+            renderAdminTable();
+        };
     </script>
 </body>
 </html>
